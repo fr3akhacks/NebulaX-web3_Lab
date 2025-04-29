@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - nebulax-network
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - blockchain
+      - minio
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=nebulax
+      - BLOCKCHAIN_URL=http://blockchain:8545
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minio
+      - MINIO_SECRET_KEY=minio123
+    networks:
+      - nebulax-network
+
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=nebulax
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - nebulax-network
+
+  blockchain:
+    build:
+      context: ./contracts
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./contracts:/app
+      - /app/node_modules
+    networks:
+      - nebulax-network
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio123
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - nebulax-network
+
+  metadata-server:
+    build:
+      context: ./metadata-server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./metadata-server:/app
+      - /app/node_modules
+    networks:
+      - nebulax-network
+
+networks:
+  nebulax-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  minio-data: 
