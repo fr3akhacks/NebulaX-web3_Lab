@@ -131,4 +131,69 @@ router.get('/:id/nfts', async (req, res) => {
   }
 });
 
+// Login endpoint with SQL Injection vulnerability
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    // VULNERABLE: Direct SQL concatenation
+    const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+    
+    // Log the query for debugging (and to make the vulnerability more obvious)
+    console.log('Executing SQL query:', query);
+    
+    // Get database from app.locals
+    const db = req.app.locals.db;
+    
+    try {
+      const result = await db.query(query);
+      
+      if (result.rows.length > 0) {
+        res.json({
+          success: true,
+          message: 'Login successful',
+          user: result.rows[0]
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          error: 'Invalid username or password'
+        });
+      }
+    } catch (dbErr) {
+      console.error('Database error during login:', dbErr);
+      
+      // For demonstration - if the SQL injection syntax is correct but DB fails,
+      // simulate a successful login with admin account
+      if (req.body.username && (req.body.username.includes("'") || req.body.username.includes("--"))) {
+        console.log("SQL injection attempt detected, simulating successful exploit");
+        res.json({
+          success: true,
+          message: 'SQL Injection successful!',
+          user: {
+            id: 1,
+            username: 'admin',
+            email: 'admin@example.com',
+            is_admin: 1,
+            exploited: true,
+            originalQuery: query,
+            error: dbErr.message
+          }
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Database error: ' + dbErr.message
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Login route error:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Server error: ' + err.message
+    });
+  }
+});
+
 module.exports = router; 

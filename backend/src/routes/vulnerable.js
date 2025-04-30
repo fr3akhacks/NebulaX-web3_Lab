@@ -58,14 +58,45 @@ router.get('/fetchPrice', async (req, res) => {
     
     console.log('Fetching data from:', url); // For demonstration/debugging
     
+    // Special case for the demonstration passwd file
+    if (url === 'http://localhost:4000/api/nft/etc/passwd') {
+      // Simulating access to /etc/passwd
+      return res.json({
+        source: url,
+        data: {
+          file: '/etc/passwd',
+          content: `root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+admin:x:1000:1000:Administrator:/home/admin:/bin/bash
+ssrf-user:x:1337:1337:SSRF Vulnerability Demo:/home/ssrf-user:/bin/bash`
+        }
+      });
+    }
+    
     // VULNERABLE: No URL validation or sanitization
     // DO NOT USE THIS IN PRODUCTION!
-    const response = await axios.get(url);
-    
-    res.json({
-      source: url,
-      data: response.data
-    });
+    try {
+      const response = await axios.get(url);
+      res.json({
+        source: url,
+        data: response.data
+      });
+    } catch (fetchError) {
+      // Provide a helpful error message that demonstrates the vulnerability
+      res.json({
+        source: url,
+        error: `Could not fetch from ${url}. This demonstrates how SSRF can be used to probe internal networks.`,
+        details: fetchError.message
+      });
+    }
   } catch (error) {
     console.error('Error fetching price data:', error);
     res.status(500).json({ 

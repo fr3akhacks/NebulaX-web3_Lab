@@ -1,6 +1,154 @@
 # NebulaX Web3 Lab
 
-A web3 application showcasing NFTs, tokens, and intentional security vulnerabilities for educational purposes.
+A hybrid Web2/Web3 security lab for learning and practicing real-world vulnerabilities in a safe, local environment.
+
+---
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Running the Lab](#running-the-lab)
+- [Vulnerabilities & Exploitation](#vulnerabilities--exploitation)
+  - [1. Reflected XSS](#1-reflected-xss)
+  - [2. Stored XSS](#2-stored-xss)
+  - [3. Server-Side Request Forgery (SSRF)](#3-server-side-request-forgery-ssrf)
+  - [4. SQL Injection (Login)](#4-sql-injection-login)
+  - [Other Vulnerabilities](#other-vulnerabilities)
+- [Troubleshooting](#troubleshooting)
+- [Security Best Practices](#security-best-practices)
+- [Disclaimer](#disclaimer)
+
+---
+
+## Installation
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+- This will install Docker and Docker Compose (if needed) and build all required images.
+
+---
+
+## Running the Lab
+
+```bash
+chmod +x run.sh
+./run.sh
+```
+- This will start all services using Docker Compose.
+- Access the web application at: [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Vulnerabilities & Exploitation
+
+### 1. Reflected XSS
+
+**Where:**  
+XSS Demo page (`/xss-demo`)
+
+**How to Exploit:**
+1. Go to the XSS Demo page at: http://localhost:3000/xss-demo
+2. Note that basic XSS payload does not work: 
+   ```html
+   <script>alert('XSS')</script>
+   ```
+3. Try the following payload to access cookies:
+   ```html
+   <img src="x" onerror="alert(document.cookie)">
+   ```
+4. This will display the session cookie which could be exfiltrated to an attacker's server.
+
+---
+
+### 2. Stored XSS
+
+**Where:**  
+Search page (`/search`)
+
+**How to Exploit:**
+1. Go to the Search page at: http://localhost:3000/search
+2. Enter the following XSS payload:
+   ```html
+   <img src="x" onerror="alert(document.cookie)">
+   ```
+3. Submit the search.
+4. This payload will be stored in recent searches, and whenever someone visits the search page or views recent searches, their cookies will be exposed.
+5. This is more dangerous than reflected XSS as it affects all visitors, not just those who click a malicious link.
+
+---
+
+### 3. Server-Side Request Forgery (SSRF)
+
+**Where:**  
+Price Checker page (`/price-checker`)
+
+**How to Exploit:**
+1. Go to the Price Checker page at: http://localhost:3000/price-checker
+2. Click "Show Advanced Options" to reveal the custom URL input.
+3. Enter the following URL:
+   ```
+   http://localhost:4000/api/nft/etc/passwd
+   ```
+4. Click "Get Price"
+5. The server will make a request to the internal endpoint and return the contents of the passwd file, which includes sensitive user information.
+6. This vulnerability could be used to access internal services, scan the network, read local files, or exfiltrate sensitive data.
+
+---
+
+### 4. SQL Injection (Login)
+
+**Where:**  
+Login page (`/login`)
+
+**How to Exploit:**
+1. Go to the Login page at: http://localhost:3000/login
+2. Enter the following in the username field:
+   ```
+   admin' --
+   ```
+3. Enter anything in the password field (it will be ignored due to the SQL comment).
+4. Click "Login"
+5. You'll be logged in as the admin user without knowing the password.
+6. This SQL injection works because:
+   - The `--` is a SQL comment that ignores the rest of the query
+   - The query becomes `SELECT * FROM users WHERE username = 'admin' --' AND password = '...'`
+   - Only the username part is checked, bypassing password verification
+
+---
+
+### Other Vulnerabilities
+
+- **Unrestricted Wallet Actions:** Call smart contract functions from unauthorized wallets.
+- **Transaction Approval Phishing:** UI does not clearly show transaction details before signing.
+- **Unchecked Fund Transfer (Web3):** Emergency withdraw function in NFT program has no access control.
+
+---
+
+## Troubleshooting
+
+- **Frontend/Backend won't start:** Check Docker is running, reinstall dependencies, check for port conflicts.
+- **Vulnerability not working:** Ensure all services are running properly. Check browser console for errors.
+- **Docker issues:** Try stopping all containers and rebuilding with `docker-compose up --build`.
+
+---
+
+## Security Best Practices
+
+- Sanitize and validate all user input.
+- Use parameterized queries for database operations.
+- Implement proper authentication and authorization.
+- Use Content Security Policy (CSP) to mitigate XSS.
+- Validate and sanitize URLs for SSRF prevention.
+
+---
+
+## Disclaimer
+
+**This project is for educational purposes only. Do not use in production.** 
+
+The vulnerabilities demonstrated are intentionally included for learning about web security concepts. Using these techniques on systems without explicit permission is illegal and unethical.
 
 ## Overview
 

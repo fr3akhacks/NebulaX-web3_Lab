@@ -30,7 +30,7 @@ const Login: React.FC = () => {
     setUserData(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/login', {
+      const response = await fetch('http://localhost:4000/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,10 @@ const Login: React.FC = () => {
               
               <div className="mt-4 text-center">
                 <p className="text-muted">
-                  <small>Note: This login page is intentionally vulnerable to SQL injection for educational purposes.</small>
+                  <small>Try SQL injection: <code>admin' --</code> as username</small>
+                </p>
+                <p className="text-muted">
+                  <small>This login page is intentionally vulnerable to SQL injection for educational purposes.</small>
                 </p>
               </div>
             </Card.Body>
