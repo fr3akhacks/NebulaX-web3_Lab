@@ -93,7 +93,8 @@ Price Checker page (`/price-checker`)
 2. Click "Show Advanced Options" to reveal the custom URL input.
 3. Enter the following URL:
    ```
-   http://localhost:4000/api/nft/etc/passwd
+   http://localhost:4000/etc/passwd
+   http://localhost:4000/secret.txt
    ```
 4. Click "Get Price"
 5. The server will make a request to the internal endpoint and return the contents of the passwd file, which includes sensitive user information.
