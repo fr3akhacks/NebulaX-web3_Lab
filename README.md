@@ -1,6 +1,7 @@
 # NebulaX Web3 Lab
 
-![Uploading image.png…]()
+<img width="1724" alt="image" src="https://github.com/user-attachments/assets/62edf680-52d4-42ff-be40-390a7e4f7e93" />
+
 
 
 A hybrid Web2/Web3 security lab for learning and practicing real-world vulnerabilities in a safe, local environment.
